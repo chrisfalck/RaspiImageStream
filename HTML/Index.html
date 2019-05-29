@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <title>.NET Core Raspberry Pi Live Stream</title>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="1920" height="1080"></canvas>
+
+    <script>
+        async function main() {
+            // Get the canvas element context to draw our images.
+            const canvas = document.getElementById("myCanvas");
+            const ctx = canvas.getContext("2d");
+
+            // Create the request object we'll use to fetch images from the server.
+            const request = new Request("http://199.27.179.226/image");
+
+            // Promise used to allow the while loop to continue after an image has loaded.
+            let resolveImg = null; 
+
+            // Create the image element the canvas will take data from to draw and then create
+            // a method that will be called whenever data finishes loading after the image element's
+            // src attribute changes. The method will resolve a promise that lets the while loop
+            // know the image has fully loaded and the canvas can now draw it.
+            let imgElement = new Image(ctx.canvas.clientWidth, ctx.canvas.clientHeight);
+            imgElement.onload = () => {
+                resolveImg();
+            }
+
+            while (true) {
+                // Fetch the next image.
+                let response = await fetch(request);
+                let imgBlob = await response.blob();
+
+                // Update the image element's src attribute with a path to the blob we loaded.
+                // This will trigger the .onload function configured earlier when the image 
+                // fully loads the blob.
+                imgElement.src = URL.createObjectURL(imgBlob);
+
+                // Wait on a promise that will be resolved by the imgElement.onload method.
+                // This ensures the image is loaded before we try to draw it to the canvas.
+                await new Promise(resolve => {
+                    resolveImg = resolve;
+                });
+
+                // Draw the image starting at location (x = 10, y = 10) on the screen
+                // just for some spacing from the screen edges.
+                ctx.drawImage(imgElement, 10, 10);
+            }
+        }
+
+        window.onload = main;
+    </script>
+</body>
+
+</html>

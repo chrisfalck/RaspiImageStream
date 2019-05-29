@@ -1,0 +1,5 @@
+bin/
+.vscode/
+.vs/
+obj/
+CSLiveStreamServer.csproj.user
